@@ -1,0 +1,71 @@
+from rest_framework import serializers
+from supermarket_api.models.product_model import Product
+from supermarket_api.models.category_model import Category 
+from django.contrib.auth.models import User
+
+from supermarket_api.serializers.category_serializer import CategorySerializer
+
+class ProductSerializer(serializers.ModelSerializer):
+    unit_measurement = serializers.ChoiceField(choices={"Units":"UN", "Liters":"LI", "Grams":"GR",})
+    owner = serializers.ReadOnlyField(source='owner.username')
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'description', 'category', 'unit_measurement', 'quantity', 'owner']
+    
+    #Create para manejar unit_measurement
+    def create(self, validated_data):
+        um_long_to_short={"Units":"UN", "Liters":"LI", "Grams":"GR",}
+        
+        product= Product(name = validated_data.get("name"), 
+                         description = validated_data.get("description"), 
+                         quantity = validated_data.get("quantity"), 
+                         unit_measurement = um_long_to_short[validated_data.get("unit_measurement")], 
+                         category = validated_data.get("category"),
+                         owner = validated_data.get("owner"))
+
+        if(validated_data.get("category").owner != validated_data.get("owner")):
+            error = {'message': 'this category is not yours'}
+            raise serializers.ValidationError(error)
+
+        product.save()
+        return product
+        
+    #Update para manejar unit_measurement
+    def update(self, instance, validated_data):
+        um_long_to_short={"Units":"UN", "Liters":"LI", "Grams":"GR",}
+
+        instance.name = validated_data.get("name")
+        instance.description = validated_data.get("description")
+        instance.quantity = validated_data.get("quantity")
+        instance.unit_measurement = um_long_to_short[validated_data.get("unit_measurement")]
+        instance.category = validated_data.get("category")
+        instance.owner = validated_data.get("owner")
+
+        if(validated_data.get("category").owner != validated_data.get("owner")):
+            error = {'message': 'this category is not yours'}
+            raise serializers.ValidationError(error)
+
+        instance.save()
+        return instance
+
+    #To Representation para manejar unit_measurement
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+
+        um_short_to_long={"UN":"Units", "LI":"Liters", "GR":"Grams",}
+
+        category = Category.objects.get(id=data["category"])
+        categorySerializer = CategorySerializer(category)
+        
+        data["owner"] = {
+            "id"        :obj.owner.id,
+            "username" : obj.owner.username
+        }
+
+        data["category"] = categorySerializer.data
+        data["unit_measurement"] = um_short_to_long[data["unit_measurement"]]
+        
+        return data
+
+    
+        
