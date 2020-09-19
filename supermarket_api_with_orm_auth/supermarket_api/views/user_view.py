@@ -6,7 +6,6 @@ from rest_framework import generics
 from rest_framework import permissions
 from supermarket_api.auth.its_me import ItsMe
 
-from django_filters.rest_framework import DjangoFilterBackend
 
 class UserList(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
@@ -14,11 +13,6 @@ class UserList(mixins.ListModelMixin,
     
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['username']
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)

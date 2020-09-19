@@ -6,7 +6,7 @@ from rest_framework import generics
 from rest_framework import permissions
 from supermarket_api.auth.is_owner_or_read_only import IsOwnerOrReadOnly
 
-from django_filters.rest_framework import DjangoFilterBackend
+
 
 class CategoryList(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
@@ -16,8 +16,6 @@ class CategoryList(mixins.ListModelMixin,
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['owner']
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
